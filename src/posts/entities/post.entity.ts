@@ -3,10 +3,12 @@ import {
   Column,
   Entity,
   JoinTable,
+  ManyToMany,
   ManyToOne,
   PrimaryGeneratedColumn,
 } from 'typeorm';
 import { Category } from './category.entity';
+import { Tag } from './tag.entity';
 
 @ObjectType()
 @Entity()
@@ -35,4 +37,9 @@ export class Post {
   @ManyToOne(() => Category, (category) => category.posts, { eager: true })
   @JoinTable()
   category: Category;
+
+  @Field(() => [Tag], { nullable: true }) // ✅ Explicitly define type as an array
+  @ManyToMany(() => Tag, (tag) => tag.posts, { eager: true })
+  @JoinTable()
+  tags: Tag[];
 }
