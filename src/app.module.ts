@@ -5,37 +5,35 @@ import { join } from 'path';
 import { ConfigModule, ConfigService } from '@nestjs/config';
 import { typeOrmConfig } from '../config/typeorm.config';
 import { TypeOrmModule } from '@nestjs/typeorm';
-import * as Joi from '@hapi/joi';
-import { ApolloDriver } from '@nestjs/apollo';
+import { ApolloDriver, ApolloDriverConfig } from '@nestjs/apollo';
 import { PostsModule } from './posts/posts.module';
+import { UserModule } from './user/user.module';
+import { AuthModule } from './auth/auth.module';
 
 @Module({
   imports: [
-    GraphQLModule.forRoot({
+    GraphQLModule.forRootAsync<ApolloDriverConfig>({
       driver: ApolloDriver,
-      autoSchemaFile: join(process.cwd(), 'src/schema.gql'),
-      playground: true,
+      imports: [ConfigModule],
+      inject: [ConfigService],
+      useFactory: (configService: ConfigService) => ({
+        autoSchemaFile: true,
+        playground: configService.get<string>('NODE_ENV') !== 'production',
+        introspection: configService.get<string>('NODE_ENV') !== 'production',
+      }),
     }),
     ConfigModule.forRoot({
-      envFilePath: [`.env.${process.env.NODE_ENV}`, '.env'], // Load specific and default env files
-      isGlobal: true, // Makes ConfigModule globally available
-      // validationSchema: Joi.object({
-      //   DB_HOST: Joi.string().required(), // Host is required
-      //   DB_PORT: Joi.number().default(5432), // Port defaults to 5432
-      //   DB_USERNAME: Joi.string().required(), // Username is required
-      //   DB_PASSWORD: Joi.string().required(), // Password is required
-      //   DB_NAME: Joi.string().required(), // Database name is required
-      //   NODE_ENV: Joi.string()
-      //     .valid('development', 'production', 'test')
-      //     .default('development'), // NODE_ENV validation
-      // }),
+      envFilePath: [`.env.${process.env.NODE_ENV}`, '.env'],
+      isGlobal: true,
     }),
     TypeOrmModule.forRootAsync({
-      imports: [ConfigModule], // Import ConfigModule for access to ConfigService
-      inject: [ConfigService], // Inject ConfigService
-      useFactory: typeOrmConfig, // Use the exported typeOrmConfig function
+      imports: [ConfigModule],
+      inject: [ConfigService],
+      useFactory: typeOrmConfig,
     }),
     PostsModule,
+    UserModule,
+    AuthModule,
   ],
   controllers: [],
   providers: [],

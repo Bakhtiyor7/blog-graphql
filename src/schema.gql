@@ -8,6 +8,12 @@ type Category {
   posts: [Post!]
 }
 
+type Tag {
+  id: Float!
+  name: String!
+  posts: [Post!]
+}
+
 type Post {
   id: Float!
   title: String!
@@ -15,6 +21,7 @@ type Post {
   author: String!
   createdAt: DateTime!
   category: Category
+  tags: [Tag!]
 }
 
 """
@@ -35,4 +42,9 @@ input CreatePostInput {
   content: String!
   author: String!
   categoryName: String!
+  tags: [TagInput!]
+}
+
+input TagInput {
+  name: String!
 }
