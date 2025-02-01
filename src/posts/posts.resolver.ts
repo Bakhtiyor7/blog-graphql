@@ -1,14 +1,16 @@
-import { Args, Mutation, Query, Resolver } from '@nestjs/graphql';
+import { Args, Int, Mutation, Query, Resolver } from '@nestjs/graphql';
 import { PostsService } from './posts.service';
 import { Post } from './entities/post.entity';
-import { Logger } from '@nestjs/common';
+import { Logger, UseGuards } from '@nestjs/common';
 import { CreatePostInput } from './dto/create-post.dto';
+import { GqlAuthGuard } from '../auth/gql-auth.guard';
+import { UpdatePostInput } from './dto/update-post.dto';
 
 @Resolver('posts')
 export class PostsResolver {
   constructor(private postsService: PostsService) {}
 
-  private readonly logger = new Logger(PostsService.name);
+  private readonly logger = new Logger(PostsResolver.name);
 
   @Query(() => [Post])
   async getPosts(): Promise<Post[]> {
@@ -16,9 +18,27 @@ export class PostsResolver {
     return this.postsService.findAll();
   }
 
+  @Query(() => Post)
+  async getPost(@Args('id', { type: () => Int }) id: number): Promise<Post> {
+    this.logger.log(
+      'Entering getPosts resolver method, fetching post with id:',
+      id,
+    );
+
+    return this.postsService.findOne(id);
+  }
+
+  @UseGuards(GqlAuthGuard)
   @Mutation(() => Post)
   async createPost(@Args('input') input: CreatePostInput): Promise<Post> {
     this.logger.log('Entering post title resolver method');
     return this.postsService.create(input);
+  }
+
+  @UseGuards(GqlAuthGuard)
+  @Mutation(() => Post)
+  async updatePost(@Args('input') input: UpdatePostInput): Promise<Post> {
+    this.logger.log('Entering update post resolver method');
+    return this.postsService.update(input);
   }
 }
