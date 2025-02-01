@@ -1,11 +1,13 @@
 import { Field, ObjectType } from '@nestjs/graphql';
 import {
   Column,
+  CreateDateColumn,
   Entity,
   JoinTable,
   ManyToMany,
   ManyToOne,
   PrimaryGeneratedColumn,
+  UpdateDateColumn,
 } from 'typeorm';
 import { Category } from './category.entity';
 import { Tag } from './tag.entity';
@@ -30,12 +32,15 @@ export class Post {
   author: string;
 
   @Field()
-  @Column({ default: () => 'CURRENT_TIMESTAMP' })
+  @CreateDateColumn({ type: 'timestamp' })
   createdAt: Date;
+
+  @Field()
+  @UpdateDateColumn({ type: 'timestamp' })
+  updatedAt: Date;
 
   @Field(() => Category, { nullable: true })
   @ManyToOne(() => Category, (category) => category.posts, { eager: true })
-  @JoinTable()
   category: Category;
 
   @Field(() => [Tag], { nullable: true }) // ✅ Explicitly define type as an array
