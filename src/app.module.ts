@@ -9,6 +9,7 @@ import { ApolloDriver, ApolloDriverConfig } from '@nestjs/apollo';
 import { PostsModule } from './posts/posts.module';
 import { UserModule } from './user/user.module';
 import { AuthModule } from './auth/auth.module';
+import { PrismaModule } from '../prisma/prisma.module';
 
 @Module({
   imports: [
@@ -26,16 +27,27 @@ import { AuthModule } from './auth/auth.module';
       envFilePath: [`.env.${process.env.NODE_ENV}`, '.env'],
       isGlobal: true,
     }),
-    TypeOrmModule.forRootAsync({
-      imports: [ConfigModule],
-      inject: [ConfigService],
-      useFactory: typeOrmConfig,
-    }),
+    // TypeOrmModule.forRootAsync({
+    //   imports: [ConfigModule],
+    //   inject: [ConfigService],
+    //   useFactory: typeOrmConfig,
+    // }),
     PostsModule,
     UserModule,
     AuthModule,
+    PrismaModule,
   ],
   controllers: [],
-  providers: [],
+  providers: [
+    {
+      provide: 'DEBUG_CONFIG',
+      useFactory: (configService: ConfigService) => {
+        console.log('Loaded NODE_ENV:', configService.get('NODE_ENV'));
+        console.log('Loaded DATABASE_URL:', configService.get('DATABASE_URL'));
+        return null;
+      },
+      inject: [ConfigService],
+    },
+  ],
 })
 export class AppModule {}
