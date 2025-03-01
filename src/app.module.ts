@@ -1,10 +1,7 @@
 import { Module } from '@nestjs/common';
 import * as process from 'node:process';
 import { GraphQLModule } from '@nestjs/graphql';
-import { join } from 'path';
 import { ConfigModule, ConfigService } from '@nestjs/config';
-import { typeOrmConfig } from '../config/typeorm.config';
-import { TypeOrmModule } from '@nestjs/typeorm';
 import { ApolloDriver, ApolloDriverConfig } from '@nestjs/apollo';
 import { PostsModule } from './posts/posts.module';
 import { UserModule } from './user/user.module';
@@ -27,11 +24,6 @@ import { PrismaModule } from '../prisma/prisma.module';
       envFilePath: [`.env.${process.env.NODE_ENV}`, '.env'],
       isGlobal: true,
     }),
-    // TypeOrmModule.forRootAsync({
-    //   imports: [ConfigModule],
-    //   inject: [ConfigService],
-    //   useFactory: typeOrmConfig,
-    // }),
     PostsModule,
     UserModule,
     AuthModule,
@@ -43,7 +35,6 @@ import { PrismaModule } from '../prisma/prisma.module';
       provide: 'DEBUG_CONFIG',
       useFactory: (configService: ConfigService) => {
         console.log('Loaded NODE_ENV:', configService.get('NODE_ENV'));
-        console.log('Loaded DATABASE_URL:', configService.get('DATABASE_URL'));
         return null;
       },
       inject: [ConfigService],

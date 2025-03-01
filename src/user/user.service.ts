@@ -1,35 +1,35 @@
 import { Injectable } from '@nestjs/common';
 import { User } from './entity/user.entity';
-import { Repository } from 'typeorm';
-import { InjectRepository } from '@nestjs/typeorm';
 import { CreateUserInput } from './dto/create-user.input';
 import * as bcrypt from 'bcryptjs';
+import { PrismaService } from '../../prisma/prisma.service';
 
 @Injectable()
 export class UserService {
   constructor(
-    @InjectRepository(User)
-    private usersRepository: Repository<User>,
+    // private usersRepository: Repository<User>,
+    private prisma: PrismaService,
   ) {}
 
   async findAll(): Promise<User[]> {
-    return await this.usersRepository.find();
+    return this.prisma.user.findMany();
   }
 
   async findOneByUsername(username: string): Promise<User | undefined> {
-    return this.usersRepository.findOne({ where: { username } });
+    return this.prisma.user.findUnique({ where: { username } });
   }
 
   async findOneByEmail(email: string): Promise<User | undefined> {
-    return this.usersRepository.findOne({ where: { email } });
+    return this.prisma.user.findUnique({ where: { email } });
   }
 
   async create(createUserInput: CreateUserInput): Promise<User> {
     const hashedPassword = await bcrypt.hash(createUserInput.password, 10);
-    const user = this.usersRepository.create({
-      ...createUserInput,
-      password: hashedPassword,
+    return this.prisma.user.create({
+      data: {
+        ...createUserInput,
+        password: hashedPassword,
+      },
     });
-    return this.usersRepository.save(user);
   }
 }

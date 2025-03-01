@@ -4,29 +4,21 @@ import {
   Logger,
   NotFoundException,
 } from '@nestjs/common';
-import { Repository } from 'typeorm';
 import { Post } from './entities/post.entity';
-import { InjectRepository } from '@nestjs/typeorm';
 import { CreatePostInput } from './dto/create-post.dto';
-import { Category } from './entities/category.entity';
-import { Tag } from './entities/tag.entity';
 import { UpdatePostInput } from './dto/update-post.dto';
+import { PrismaService } from '../../prisma/prisma.service';
 
 @Injectable()
 export class PostsService {
-  constructor(
-    @InjectRepository(Post)
-    private readonly postRepository: Repository<Post>,
-    @InjectRepository(Category)
-    private readonly categoryRepository: Repository<Category>,
-    @InjectRepository(Tag)
-    private readonly tagRepository: Repository<Tag>,
-  ) {}
+  constructor(private prisma: PrismaService) {}
 
   private readonly logger = new Logger(PostsService.name);
 
   async findAll(): Promise<Post[]> {
-    const post = await this.postRepository.find();
+    const post = await this.prisma.post.findMany({
+      include: { category: true, tags: true },
+    });
     console.log('post:', post);
     if (!post) {
       throw new NotFoundException('Post not found');
@@ -37,9 +29,9 @@ export class PostsService {
   async findOne(id: number): Promise<Post> {
     this.logger.log('Entering findOne PostService method');
 
-    const post = await this.postRepository.findOne({
+    const post = await this.prisma.post.findUnique({
       where: { id },
-      relations: ['category', 'tags'],
+      include: { category: true, tags: true },
     });
     if (!post) {
       throw new NotFoundException(`Post with id ${id} not found`);
@@ -50,58 +42,65 @@ export class PostsService {
   async create(input: CreatePostInput): Promise<Post> {
     const { title, content, author, categoryName, tags } = input;
 
-    const tagEntities: Tag[] = [];
+    // Handle category (find or create by name, if provided)
+    let categoryId: number | undefined;
+    if (categoryName) {
+      const category = await this.prisma.category.upsert({
+        where: { name: categoryName },
+        create: { name: categoryName },
+        update: {},
+      });
+      categoryId = category.id;
+    }
 
-    if (input.tags && input.tags.length > 0) {
-      for (const tagInput of input.tags) {
-        let tag = await this.tagRepository.findOne({
+    // Handle tags (find or create, then connect)
+    const tagIds: number[] = [];
+    if (tags && tags.length > 0) {
+      for (const tagInput of tags) {
+        const tag = await this.prisma.tag.upsert({
           where: { name: tagInput.name },
+          create: { name: tagInput.name },
+          update: {},
         });
-
-        if (!tag) {
-          tag = this.tagRepository.create({ name: tagInput.name });
-          await this.tagRepository.save(tag);
-        }
-
-        tagEntities.push(tag);
+        tagIds.push(tag.id);
       }
     }
 
-    const category = await this.categoryRepository.findOne({
-      where: { name: categoryName },
+    // Create the post and connect the category and tags
+    return this.prisma.post.create({
+      data: {
+        title,
+        content,
+        author,
+        categoryId, // Connect to category if provided
+        tags: {
+          connect: tagIds.map((id) => ({ id })), // Connect existing or newly created tags
+        },
+      },
+      include: { category: true, tags: true }, // Include related data in the response
     });
-    if (!category) {
-      throw new BadRequestException(
-        `Category '${categoryName}' does not exist.`,
-      );
-    }
-
-    const post = this.postRepository.create({
-      title,
-      content,
-      author,
-      category,
-      tags: tagEntities,
-    });
-    return this.postRepository.save(post);
   }
 
   async update(input: UpdatePostInput): Promise<Post> {
     const { id, title, content, author, categoryName, tags } = input;
-    const post = await this.postRepository.findOne({ where: { id: id } });
+    const post = await this.prisma.post.findUnique({
+      where: { id: id },
+      include: { category: true, tags: true },
+    });
     console.log('post:', post.title);
     if (!post) {
       throw new NotFoundException(`Post with id ${id} not found`);
     }
 
     // Update simple fields if provided
+    const data: any = {};
     if (title !== undefined) post.title = title;
     if (content !== undefined) post.content = content;
     if (author !== undefined) post.author = author;
 
     // Update category if provided
     if (categoryName) {
-      const category = await this.categoryRepository.findOne({
+      const category = await this.prisma.category.findUnique({
         where: { name: categoryName },
       });
       if (!category) {
@@ -114,28 +113,38 @@ export class PostsService {
 
     // Update tags if provided
     if (tags && tags.length > 0) {
-      const tagEntities: Tag[] = [];
+      const tagIds: number[] = [];
       for (const tagInput of tags) {
-        let tag = await this.tagRepository.findOne({
-          where: { name: tagInput.name },
+        const tag = await this.prisma.tag.upsert({
+          where: { name: tagInput.name }, // Adjust based on whether name is unique or use Option 2 from previous response
+          create: { name: tagInput.name },
+          update: {},
         });
-        if (!tag) {
-          tag = this.tagRepository.create({ name: tagInput.name });
-          await this.tagRepository.save(tag);
-        }
-        tagEntities.push(tag);
+        tagIds.push(tag.id);
       }
-      post.tags = tagEntities;
+      data.tags = { connect: tagIds.map((id) => ({ id })) }; // Connect existing or newly created tags
     }
 
-    return this.postRepository.save(post);
+    return this.prisma.post.update({
+      where: { id },
+      data,
+      include: { category: true, tags: true },
+    });
   }
 
   async remove(id: number): Promise<boolean> {
-    const result = await this.postRepository.delete(id);
-    if (result.affected === 0) {
-      throw new NotFoundException(`Post with id ${id} not found`);
+    try {
+      // Attempt to delete the post by its ID
+      await this.prisma.post.delete({
+        where: { id },
+      });
+      return true; // Indicate success
+    } catch (error) {
+      if (error.code === 'P2025') {
+        // Prisma error for "Record not found"
+        throw new NotFoundException(`Post with id ${id} not found`);
+      }
+      throw error; // Re-throw other errors
     }
-    return true;
   }
 }
