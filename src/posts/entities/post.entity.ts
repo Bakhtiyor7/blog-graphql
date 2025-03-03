@@ -1,4 +1,5 @@
 import { Field, ObjectType } from '@nestjs/graphql';
+import { Comment } from './comment.entity';
 
 @ObjectType()
 export class Tag {
@@ -43,4 +44,7 @@ export class Post {
 
   @Field(() => [Tag], { nullable: true }) // ✅ Explicitly define type as an array
   tags: Tag[];
+
+  @Field(() => [Comment], { nullable: true })
+  comments: Comment[];
 }

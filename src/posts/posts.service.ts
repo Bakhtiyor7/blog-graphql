@@ -17,7 +17,7 @@ export class PostsService {
 
   async findAll(): Promise<Post[]> {
     const post = await this.prisma.post.findMany({
-      include: { category: true, tags: true },
+      include: { category: true, tags: true, comments: true },
     });
     console.log('post:', post);
     if (!post) {
@@ -31,7 +31,7 @@ export class PostsService {
 
     const post = await this.prisma.post.findUnique({
       where: { id },
-      include: { category: true, tags: true },
+      include: { category: true, tags: true, comments: true },
     });
     if (!post) {
       throw new NotFoundException(`Post with id ${id} not found`);
@@ -77,7 +77,7 @@ export class PostsService {
           connect: tagIds.map((id) => ({ id })), // Connect existing or newly created tags
         },
       },
-      include: { category: true, tags: true }, // Include related data in the response
+      include: { category: true, tags: true, comments: true }, // Include related data in the response
     });
   }
 
@@ -85,7 +85,7 @@ export class PostsService {
     const { id, title, content, author, categoryName, tags } = input;
     const post = await this.prisma.post.findUnique({
       where: { id: id },
-      include: { category: true, tags: true },
+      include: { category: true, tags: true, comments: true },
     });
     console.log('post:', post.title);
     if (!post) {
@@ -128,7 +128,7 @@ export class PostsService {
     return this.prisma.post.update({
       where: { id },
       data,
-      include: { category: true, tags: true },
+      include: { category: true, tags: true, comments: true },
     });
   }
 

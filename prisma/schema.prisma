@@ -33,6 +33,7 @@ model Post {
   tags       Tag[]     @relation("PostToTag")
   User       User?     @relation(fields: [userId], references: [id])
   userId     Int?
+  comments   Comment[]
 }
 
 model Category {
@@ -45,4 +46,14 @@ model Tag {
   id    Int    @id @default(autoincrement())
   name  String @unique
   posts Post[] @relation("PostToTag")
+}
+
+model Comment {
+  id        Int      @id @default(autoincrement())
+  content   String
+  author    String
+  post      Post     @relation(fields: [postId], references: [id])
+  postId    Int
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
 }
