@@ -5,6 +5,7 @@ import { CreateUserInput } from './dto/create-user.input';
 import { UseGuards } from '@nestjs/common';
 import { GqlAuthGuard } from '../auth/gql-auth.guard';
 
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
 @Resolver((of) => User)
 export class UserResolver {
   constructor(private readonly userService: UserService) {}
