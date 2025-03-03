@@ -41,4 +41,17 @@ export class PostsResolver {
     this.logger.log('Entering update post resolver method');
     return this.postsService.update(input);
   }
+
+  @UseGuards(GqlAuthGuard)
+  @Mutation(() => Post)
+  async deletePost(
+    @Args('id', { type: () => Int }) id: number,
+  ): Promise<boolean> {
+    try {
+      this.logger.log('Entering delete post resolver method');
+      return this.postsService.remove(id);
+    } catch (e) {
+      console.log(e);
+    }
+  }
 }

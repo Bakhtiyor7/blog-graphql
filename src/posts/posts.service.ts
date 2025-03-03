@@ -93,6 +93,7 @@ export class PostsService {
     }
 
     // Update simple fields if provided
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const data: any = {};
     if (title !== undefined) post.title = title;
     if (content !== undefined) post.content = content;
