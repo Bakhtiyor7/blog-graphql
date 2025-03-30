@@ -15,8 +15,15 @@ export class PostsService {
 
   private readonly logger = new Logger(PostsService.name);
 
-  async findAll(): Promise<Post[]> {
+  async findAll(paginationArgs: {
+    skip: number;
+    take: number;
+  }): Promise<Post[]> {
+    const { skip, take } = paginationArgs || {};
+
     const post = await this.prisma.post.findMany({
+      skip,
+      take,
       include: { category: true, tags: true, comments: true },
     });
     console.log('post:', post);

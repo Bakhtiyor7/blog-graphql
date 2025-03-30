@@ -13,9 +13,17 @@ export class PostsResolver {
   private readonly logger = new Logger(PostsResolver.name);
 
   @Query(() => [Post])
-  async getPosts(): Promise<Post[]> {
-    this.logger.log('Entering getPosts resolver method');
-    return this.postsService.findAll();
+  async getPosts(
+    @Args('skip', { type: () => Int, nullable: true }) skip?: number,
+    @Args('take', { type: () => Int, nullable: true }) take?: number,
+  ): Promise<Post[]> {
+    try {
+      this.logger.log('Entering getPosts resolver method');
+      return this.postsService.findAll({ skip, take });
+    } catch (error) {
+      this.logger.error(error);
+      throw error;
+    }
   }
 
   @Query(() => Post)
