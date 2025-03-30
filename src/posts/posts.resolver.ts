@@ -31,7 +31,7 @@ export class PostsResolver {
   @UseGuards(GqlAuthGuard)
   @Mutation(() => Post)
   async createPost(@Args('input') input: CreatePostInput): Promise<Post> {
-    this.logger.log('Entering post title resolver method');
+    this.logger.log('Entering createPost resolver method');
     return this.postsService.create(input);
   }
 
