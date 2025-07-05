@@ -18,6 +18,9 @@ export class CreatePostInput {
   author: string;
 
   @Field({ nullable: true })
+  image?: string;
+
+  @Field({ nullable: true })
   categoryName: string;
 
   @Field(() => [TagInput], { nullable: true }) // ✅ Accepts array of TagInput objects

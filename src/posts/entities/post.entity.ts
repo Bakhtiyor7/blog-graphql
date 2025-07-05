@@ -39,6 +39,9 @@ export class Post {
   @Field()
   updatedAt: Date;
 
+  @Field({ nullable: true })
+  image?: string;
+
   @Field(() => Category, { nullable: true })
   category: Category;
 

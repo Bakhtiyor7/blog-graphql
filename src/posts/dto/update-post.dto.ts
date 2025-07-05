@@ -5,4 +5,5 @@ import { CreatePostInput } from './create-post.dto';
 export class UpdatePostInput extends PartialType(CreatePostInput) {
   @Field(() => Int)
   id: number;
+  @Field({ nullable: true }) image?: string;
 }

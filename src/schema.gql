@@ -27,6 +27,7 @@ type Post {
   id: Float!
   title: String!
   content: String!
+  image: String!
   author: String!
   createdAt: DateTime!
   category: Category
