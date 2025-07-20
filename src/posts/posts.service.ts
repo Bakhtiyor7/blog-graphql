@@ -38,7 +38,7 @@ export class PostsService {
 
         const post = await this.prisma.post.findUnique({
             where: { id },
-            include: { category: true, tags: true, comments: true },
+            include: { category: true, tags: true, comments: true, user: true },
         })
         if (!post) {
             throw new NotFoundException(`Post with id ${id} not found`)
