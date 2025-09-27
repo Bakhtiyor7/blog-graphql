@@ -47,7 +47,7 @@ export class PostsService {
     }
 
     async create(input: CreatePostInput): Promise<Post> {
-        const { title, content, author, categoryName, tags } = input
+        const { title, content, author, categoryName, tags, image } = input
 
         // Handle category (find or create by name, if provided)
 
@@ -80,7 +80,8 @@ export class PostsService {
                 title,
                 content,
                 author,
-                categoryId, // Connect to category if provided
+                image, // ← persist cover image
+                ...(categoryId && { categoryId }),
                 tags: {
                     connect: tagIds.map((id) => ({ id })), // Connect existing or newly created tags
                 },
