@@ -26,7 +26,7 @@ export class PostsService {
             take,
             include: { category: true, tags: true, comments: true },
         })
-        console.log('post:', post)
+
         if (!post) {
             throw new NotFoundException('Post not found')
         }
@@ -47,9 +47,10 @@ export class PostsService {
     }
 
     async create(input: CreatePostInput): Promise<Post> {
-        const { title, content, author, categoryName, tags } = input
+        const { title, content, author, categoryName, tags, image } = input
 
         // Handle category (find or create by name, if provided)
+
         let categoryId: number | undefined
         if (categoryName) {
             const category = await this.prisma.category.upsert({
@@ -79,7 +80,8 @@ export class PostsService {
                 title,
                 content,
                 author,
-                categoryId, // Connect to category if provided
+                image, // ← persist cover image
+                ...(categoryId && { categoryId }),
                 tags: {
                     connect: tagIds.map((id) => ({ id })), // Connect existing or newly created tags
                 },
@@ -94,7 +96,7 @@ export class PostsService {
             where: { id: id },
             include: { category: true, tags: true, comments: true },
         })
-        console.log('post:', post.title)
+
         if (!post) {
             throw new NotFoundException(`Post with id ${id} not found`)
         }

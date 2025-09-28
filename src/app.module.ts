@@ -7,6 +7,9 @@ import { PostsModule } from './posts/posts.module';
 import { UserModule } from './user/user.module';
 import { AuthModule } from './auth/auth.module';
 import { PrismaModule } from '../prisma/prisma.module';
+import { UploadController } from './upload/upload.controller';
+import { UploadService } from './upload/upload.service';
+import { UploadModule } from './upload/upload.module';
 
 @Module({
   imports: [
@@ -28,8 +31,9 @@ import { PrismaModule } from '../prisma/prisma.module';
     UserModule,
     AuthModule,
     PrismaModule,
+    UploadModule,
   ],
-  controllers: [],
+  controllers: [UploadController],
   providers: [
     {
       provide: 'DEBUG_CONFIG',
@@ -39,6 +43,7 @@ import { PrismaModule } from '../prisma/prisma.module';
       },
       inject: [ConfigService],
     },
+    UploadService,
   ],
 })
 export class AppModule {}
