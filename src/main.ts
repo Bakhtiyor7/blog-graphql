@@ -11,7 +11,7 @@ async function bootstrap() {
     app.useStaticAssets(join(process.cwd(), 'uploads'), { prefix: '/uploads/' })
 
     app.enableCors({
-        origin: ['http://localhost:3000'], // exact origin(s), no '*'
+        origin: ['*'], // TODO: specify frontend URL in production
         credentials: true, // allow credentials
         methods: ['GET', 'POST', 'PUT', 'PATCH', 'DELETE', 'OPTIONS'],
         allowedHeaders: ['Content-Type', 'Authorization'],

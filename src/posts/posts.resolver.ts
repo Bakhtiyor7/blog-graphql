@@ -17,10 +17,12 @@ export class PostsResolver {
     @Query(() => [PostGQL], { name: 'getPosts' })
     async getPosts(
         @Args('skip', { type: () => Int, nullable: true }) skip?: number,
-        @Args('take', { type: () => Int, nullable: true }) take?: number
+        @Args('take', { type: () => Int, nullable: true }) take?: number,
+        @Args('categoryName', { type: () => String, nullable: true })
+        categoryName?: string
     ): Promise<PostGQL[]> {
-        this.logger.log('getPosts')
-        return this.postsService.findAll({ skip, take })
+        this.logger.log(`getPosts (category=${categoryName ?? 'ALL'})`)
+        return this.postsService.findAll({ skip, take, categoryName })
     }
 
     @Query(() => PostGQL, { name: 'getPost', nullable: true })

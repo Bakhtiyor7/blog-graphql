@@ -18,13 +18,21 @@ export class PostsService {
     async findAll(paginationArgs: {
         skip: number
         take: number
+        categoryName?: string
     }): Promise<Post[]> {
-        const { skip, take } = paginationArgs || {}
+        const { skip, take, categoryName } = paginationArgs || {}
 
         const post = await this.prisma.post.findMany({
             skip,
             take,
-            include: { category: true, tags: true, comments: true },
+            where: categoryName
+                ? { category: { name: categoryName } }
+                : undefined,
+            include: {
+                category: true,
+                tags: true,
+                comments: true,
+            },
         })
 
         if (!post) {
