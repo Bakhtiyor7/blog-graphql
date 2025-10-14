@@ -1,7 +1,7 @@
 // src/posts/posts.resolver.ts
 
 import { Resolver, Query, Mutation, Args, Int } from '@nestjs/graphql'
-import { Post as PostGQL } from './entities/post.entity'
+import { Post as PostGQL, PostConnection } from './entities/post.entity'
 import { PostsService } from './posts.service'
 import { CreatePostInput } from './dto/create-post.dto'
 import { UpdatePostInput } from './dto/update-post.dto'
@@ -14,15 +14,16 @@ export class PostsResolver {
 
     constructor(private readonly postsService: PostsService) {}
 
-    @Query(() => [PostGQL], { name: 'getPosts' })
+    @Query(() => PostConnection, { name: 'getPosts' })
     async getPosts(
-        @Args('skip', { type: () => Int, nullable: true }) skip?: number,
-        @Args('take', { type: () => Int, nullable: true }) take?: number,
+        @Args('first', { type: () => Int, nullable: true, defaultValue: 10 })
+        first: number,
+        @Args('after', { type: () => String, nullable: true }) after?: string,
         @Args('categoryName', { type: () => String, nullable: true })
         categoryName?: string
-    ): Promise<PostGQL[]> {
+    ): Promise<PostConnection> {
         this.logger.log(`getPosts (category=${categoryName ?? 'ALL'})`)
-        return this.postsService.findAll({ skip, take, categoryName })
+        return this.postsService.findAll({ first, after, categoryName })
     }
 
     @Query(() => PostGQL, { name: 'getPost', nullable: true })

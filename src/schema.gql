@@ -22,10 +22,10 @@ type Tag {
 }
 
 type Post {
-    id: Float!
+    id: ID!
     title: String!
     content: String!
-    image: String!
+    image: String
     author: String!
     createdAt: DateTime!
     category: Category
@@ -37,10 +37,30 @@ A date-time string at UTC, such as 2019-12-03T09:54:33Z, compliant with the date
 """
 scalar DateTime
 
+# --- New types ---
+type PostEdge {
+    node: Post!
+    cursor: String! # opaque base64 of the underlying id (or composite)
+}
+
+type PageInfo {
+    endCursor: String
+    hasNextPage: Boolean!
+}
+
+type PostConnection {
+    edges: [PostEdge!]!
+    pageInfo: PageInfo!
+}
+
+# --- Query ---
 type Query {
     user(id: Int!): User
-    getPosts: [Post!]!
-    getPosts(skip: Int, take: Int, categoryName: String): [Post!]!
+    getPosts(
+        first: Int! = 10
+        after: String
+        categoryName: String
+    ): PostConnection!
 }
 
 type Mutation {

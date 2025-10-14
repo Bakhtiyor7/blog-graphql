@@ -4,10 +4,25 @@ import {
     Logger,
     NotFoundException,
 } from '@nestjs/common'
-import { Post } from './entities/post.entity'
+import { Post, PostConnection } from './entities/post.entity'
 import { CreatePostInput } from './dto/create-post.dto'
 import { UpdatePostInput } from './dto/update-post.dto'
 import { PrismaService } from '../../prisma/prisma.service'
+import { Prisma } from '@prisma/client'
+
+type PostWithRelations = Prisma.PostGetPayload<{
+    include: { category: true; tags: true; comments: true }
+}>
+
+function encodeCursor(id: number): string {
+    return Buffer.from(String(id), 'utf8').toString('base64')
+}
+function decodeCursor(cursor: string): number {
+    const s = Buffer.from(cursor, 'base64').toString('utf8')
+    const n = Number(s)
+    if (!Number.isInteger(n)) throw new BadRequestException('Invalid cursor')
+    return n
+}
 
 @Injectable()
 export class PostsService {
@@ -15,30 +30,55 @@ export class PostsService {
 
     private readonly logger = new Logger(PostsService.name)
 
-    async findAll(paginationArgs: {
-        skip: number
-        take: number
+    async findAll(args: {
+        first: number
+        after?: string
         categoryName?: string
-    }): Promise<Post[]> {
-        const { skip, take, categoryName } = paginationArgs || {}
+    }): Promise<PostConnection> {
+        const { first, after, categoryName } = args
 
-        const post = await this.prisma.post.findMany({
-            skip,
+        if (first <= 0 || first > 100) {
+            throw new BadRequestException('first must be between 1 and 100')
+        }
+
+        const where = categoryName
+            ? { category: { name: categoryName } }
+            : undefined
+
+        // We fetch one extra to know if there's another page.
+        const take = first + 1
+
+        const prismaArgs: Parameters<typeof this.prisma.post.findMany>[0] = {
+            where,
+            orderBy: { id: 'desc' },
+            include: { category: true, tags: true, comments: true }, // <-- IMPORTANT
             take,
-            where: categoryName
-                ? { category: { name: categoryName } }
-                : undefined,
-            include: {
-                category: true,
-                tags: true,
-                comments: true,
-            },
+        }
+        if (after) {
+            const afterId = decodeCursor(after)
+            prismaArgs.cursor = { id: afterId }
+            prismaArgs.skip = 1 // exclude the cursor row itself
+        }
+
+        const rows = await this.prisma.post.findMany({
+            ...prismaArgs,
+            include: { category: true, tags: true, comments: true },
         })
 
-        if (!post) {
-            throw new NotFoundException('Post not found')
+        const hasNextPage = rows.length > first
+        const slice = hasNextPage ? rows.slice(0, first) : rows
+
+        const edges = slice.map(
+            (node): { node: PostWithRelations; cursor: string } => ({
+                node,
+                cursor: encodeCursor(node.id),
+            })
+        )
+
+        return {
+            edges,
+            pageInfo: { endCursor: edges.at(-1)?.cursor ?? null, hasNextPage },
         }
-        return post
     }
 
     async findOne(id: number): Promise<Post> {
