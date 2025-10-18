@@ -7,7 +7,6 @@ import { CreatePostInput } from './dto/create-post.dto'
 import { UpdatePostInput } from './dto/update-post.dto'
 import { GqlAuthGuard } from '../auth/gql-auth.guard'
 import { UseGuards, Logger } from '@nestjs/common'
-
 @Resolver(() => PostGQL)
 export class PostsResolver {
     private readonly logger = new Logger(PostsResolver.name)
