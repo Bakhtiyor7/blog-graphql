@@ -1,6 +1,6 @@
 // src/posts/posts.resolver.ts
 
-import { Resolver, Query, Mutation, Args, Int } from '@nestjs/graphql'
+import { Resolver, Query, Mutation, Args, Int, Context } from '@nestjs/graphql'
 import { Post as PostGQL, PostConnection } from './entities/post.entity'
 import { PostsService } from './posts.service'
 import { CreatePostInput } from './dto/create-post.dto'
@@ -34,9 +34,12 @@ export class PostsResolver {
 
     @UseGuards(GqlAuthGuard)
     @Mutation(() => PostGQL, { name: 'createPost' })
-    async createPost(@Args('input') input: CreatePostInput): Promise<PostGQL> {
-        this.logger.log('createPost')
-        return this.postsService.create(input)
+    async createPost(
+        @Args('input') input: CreatePostInput,
+        @Context() context: { req: { user: { userId: number } } }
+    ): Promise<PostGQL> {
+        this.logger.log(`createPost by user ${context.req.user.userId}`)
+        return this.postsService.create(input, context.req.user.userId)
     }
 
     @UseGuards(GqlAuthGuard)

@@ -94,7 +94,7 @@ export class PostsService {
         return post
     }
 
-    async create(input: CreatePostInput): Promise<Post> {
+    async create(input: CreatePostInput, userId: number): Promise<Post> {
         const { title, content, author, categoryName, tags, image } = input
 
         // Handle category (find or create by name, if provided)
@@ -122,13 +122,14 @@ export class PostsService {
             }
         }
 
-        // Create the post and connect the category and tags
+        // Create the post and connect the category, tags, and user
         return this.prisma.post.create({
             data: {
                 title,
                 content,
                 author,
                 image, // ← persist cover image
+                userId, // ← save userId from authenticated user
                 ...(categoryId && { categoryId }),
                 tags: {
                     connect: tagIds.map((id) => ({ id })), // Connect existing or newly created tags
