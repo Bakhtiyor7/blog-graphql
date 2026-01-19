@@ -55,3 +55,30 @@ export class Post {
     @Field(() => UserGQL, { nullable: true })
     user?: UserGQL
 }
+
+@ObjectType()
+export class PostEdge {
+    @Field(() => Post)
+    node: Post
+
+    @Field()
+    cursor: string
+}
+
+@ObjectType()
+export class PageInfo {
+    @Field({ nullable: true })
+    endCursor?: string
+
+    @Field()
+    hasNextPage: boolean
+}
+
+@ObjectType()
+export class PostConnection {
+    @Field(() => [PostEdge])
+    edges: PostEdge[]
+
+    @Field(() => PageInfo)
+    pageInfo: PageInfo
+}

@@ -3,35 +3,33 @@
 # ------------------------------------------------------
 
 type User {
-  id: Int!
-  email: String!
-  username: String
-  posts: [Post!]
+    id: Int!
+    email: String!
+    username: String
+    posts: [Post!]
 }
 
-
-
 type Category {
-  id: Float!
-  name: String!
-  posts: [Post!]
+    id: Float!
+    name: String!
+    posts: [Post!]
 }
 
 type Tag {
-  id: Float!
-  name: String!
-  posts: [Post!]
+    id: Float!
+    name: String!
+    posts: [Post!]
 }
 
 type Post {
-  id: Float!
-  title: String!
-  content: String!
-  image: String!
-  author: String!
-  createdAt: DateTime!
-  category: Category
-  tags: [Tag!]
+    id: ID!
+    title: String!
+    content: String!
+    image: String
+    author: String!
+    createdAt: DateTime!
+    category: Category
+    tags: [Tag!]
 }
 
 """
@@ -39,23 +37,44 @@ A date-time string at UTC, such as 2019-12-03T09:54:33Z, compliant with the date
 """
 scalar DateTime
 
+# --- New types ---
+type PostEdge {
+    node: Post!
+    cursor: String! # opaque base64 of the underlying id (or composite)
+}
+
+type PageInfo {
+    endCursor: String
+    hasNextPage: Boolean!
+}
+
+type PostConnection {
+    edges: [PostEdge!]!
+    pageInfo: PageInfo!
+}
+
+# --- Query ---
 type Query {
-  user(id: Int!): User
-  getPosts: [Post!]!
+    user(id: Int!): User
+    getPosts(
+        first: Int! = 10
+        after: String
+        categoryName: String
+    ): PostConnection!
 }
 
 type Mutation {
-  createPost(input: CreatePostInput!): Post!
+    createPost(input: CreatePostInput!): Post!
 }
 
 input CreatePostInput {
-  title: String!
-  content: String!
-  author: String!
-  categoryName: String!
-  tags: [TagInput!]
+    title: String!
+    content: String!
+    author: String!
+    categoryName: String!
+    tags: [TagInput!]
 }
 
 input TagInput {
-  name: String!
+    name: String!
 }

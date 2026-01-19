@@ -21,6 +21,10 @@ import { UploadModule } from './upload/upload.module';
         autoSchemaFile: true,
         playground: configService.get<string>('NODE_ENV') !== 'production',
         introspection: configService.get<string>('NODE_ENV') !== 'production',
+        cors: {
+          origin: ['http://localhost:3000', 'http://localhost:3001'],
+          credentials: true,
+        },
       }),
     }),
     ConfigModule.forRoot({
